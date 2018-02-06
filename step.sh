@@ -1,7 +1,11 @@
 #!/bin/bash
 set -ex
 
-echo "This is the value specified for the input 'example_step_input': ${example_step_input}"
+echo "Input:"
+echo "workspace: ${workspace_path}"
+echo "project: ${project_path}"
+echo "configuration: ${configuration_name}"
+echo "scheme: ${scheme_name}"
 
 #
 # --- Export Environment Variables for other Steps:
@@ -29,32 +33,36 @@ BUILD_COMMAND='xcodebuild '
 # Workspace / project
 if [ -n $workspace_path ]
 then
-$BUILD_COMMAND+='-workspace '
-$BUILD_COMMAND+=$workspace_path
+BUILD_COMMAND+='-workspace '
+BUILD_COMMAND+=$workspace_path
 else
-$BUILD_COMMAND+='-project '
-$BUILD_COMMAND+=$project_path
+BUILD_COMMAND+='-project '
+BUILD_COMMAND+=$project_path
 fi
 
 # Scheme
 if [ -n $scheme_name ]
 then
-$BUILD_COMMAND+=' -scheme '
-$BUILD_COMMAND+=$scheme_name
+BUILD_COMMAND+=' -scheme '
+BUILD_COMMAND+=$scheme_name
 fi
 
 # Configuration
 if [ -n $configuration_name ]
 then
-$BUILD_COMMAND+=' -configuration '
-$BUILD_COMMAND+=$configuration_name
+BUILD_COMMAND+=' -configuration '
+BUILD_COMMAND+=$configuration_name
 fi
 
-$BUILD_COMMAND+=' -derivedDataPath $BITRISE_DEPLOY_DIR/'
+BUILD_COMMAND+=' -derivedDataPath $BITRISE_DEPLOY_DIR/'
 
 # Arch build commands
-SIM_BUILD_COMMAND = $BUILD_COMMAND+'iphonesimulator -sdk iphonesimulator clean build'
-OS_BUILD_COMMAND = $BUILD_COMMAND+'iphoneos -sdk iphoneos clean build'
+SIM_BUILD_COMMAND = $BUILD_COMMAND'iphonesimulator -sdk iphonesimulator clean build'
+OS_BUILD_COMMAND = $BUILD_COMMAND'iphoneos -sdk iphoneos clean build'
+
+echo "Build commands:"
+echo "Sim: ${SIM_BUILD_COMMAND}"
+echo "OS: ${OS_BUILD_COMMAND}"
 
 # Run builds
 eval $SIM_BUILD_COMMAND
