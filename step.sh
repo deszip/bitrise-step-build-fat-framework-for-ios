@@ -27,17 +27,27 @@ echo "scheme: ${scheme_name}"
 #  with a 0 exit code `bitrise` will register your Step as "successful".
 # Any non zero exit code will be registered as "failed" by `bitrise`.
 
+# Inputs
+workspace_path='/tmp/foo/AppSpectorSDK.xcworkspace'
+project_path=''
+configuration_name='Release'
+scheme_name='AppSpectorSDK Release'
+framework_name='AppSpector'
+
 # Compile build command
 BUILD_COMMAND='xcodebuild '
+BINARY_NAME=$scheme_name
 
 # Workspace / project
 if [ -n $workspace_path ]
 then
 BUILD_COMMAND+='-workspace '
 BUILD_COMMAND+=$workspace_path
+BINARY_NAME=$workspace_path
 else
 BUILD_COMMAND+='-project '
 BUILD_COMMAND+=$project_path
+BINARY_NAME=$project_path
 fi
 
 # Scheme
@@ -57,8 +67,8 @@ fi
 BUILD_COMMAND+=' -derivedDataPath $BITRISE_DEPLOY_DIR/'
 
 # Arch build commands
-SIM_BUILD_COMMAND = $BUILD_COMMAND'iphonesimulator -sdk iphonesimulator clean build'
-OS_BUILD_COMMAND = $BUILD_COMMAND'iphoneos -sdk iphoneos clean build'
+SIM_BUILD_COMMAND=$BUILD_COMMAND'iphonesimulator -sdk iphonesimulator clean build'
+OS_BUILD_COMMAND=$BUILD_COMMAND'iphoneos -sdk iphoneos clean build'
 
 echo "Build commands:"
 echo "Sim: ${SIM_BUILD_COMMAND}"
@@ -69,7 +79,18 @@ eval $SIM_BUILD_COMMAND
 eval $OS_BUILD_COMMAND
 
 # Make fat binary
+if [ -n $framework_name ]
+then
+BINARY_NAME=framework_name
+else
+BINARY_NAME=$BINARY_NAME | sed -r "s/.+\/(.+)\..+/\1/"
+fi
+
 mkdir $BITRISE_DEPLOY_DIR/fat
+cp -R $BITRISE_DEPLOY_DIR/iphoneos/Build/Products/Release-iphoneos/$BINARY_NAME.framework $BITRISE_DEPLOY_DIR/fat
+lipo -create $BITRISE_DEPLOY_DIR/iphoneos/Build/Products/Release-iphoneos/$BINARY_NAME.framework/$BINARY_NAME \
+$BITRISE_DEPLOY_DIR/iphonesimulator/Build/Products/Release-iphonesimulator/$BINARY_NAME.framework/$BINARY_NAME \
+-output $BITRISE_DEPLOY_DIR/fat/$BINARY_NAME.framework/$BINARY_NAME
 
 #...
 
@@ -81,3 +102,5 @@ mkdir $BITRISE_DEPLOY_DIR/fat
 #mkdir $BITRISE_DEPLOY_DIR/fat
 #cp -R $BITRISE_DEPLOY_DIR/iphoneos/Build/Products/Release-iphoneos/MySDK.framework $BITRISE_DEPLOY_DIR/fat
 #lipo -create $BITRISE_DEPLOY_DIR/iphoneos/Build/Products/Release-iphoneos/MySDK.framework/MySDK $BITRISE_DEPLOY_DIR/iphonesimulator/Build/Products/Release-iphonesimulator/MySDK.framework/MySDK -output $BITRISE_DEPLOY_DIR/fat/MySDK.framework/MySDK
+
+# envman add --key BINARY_PATH --value ''

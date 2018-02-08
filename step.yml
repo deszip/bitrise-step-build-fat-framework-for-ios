@@ -97,6 +97,16 @@ inputs:
       is_required: false
       value_options: []
 
+  - framework_name: 
+    opts:
+      title: "Framework name"
+      summary: Framework file name
+      description: |
+        Name of the output framework, will use scheme name if empty
+      is_expand: true
+      is_required: false
+      value_options: []
+
 
 outputs:
   - BINARY_PATH:
